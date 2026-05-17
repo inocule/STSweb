@@ -1,0 +1,9 @@
+{
+  "name": "roome",
+  "version": "1.0.0",
+  "description": "RooME Dorm Finder — run from project root",
+  "scripts": {
+    "dev":   "npm run dev --prefix backend",
+    "start": "npm start --prefix backend"
+  }
+}

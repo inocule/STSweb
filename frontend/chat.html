@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RooME – Chat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="dashboard.css"/>
+</head>
+<body class="chat-body">
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="logo">
+      <img src="./Images/RooME.webp" alt="RooME Logo" onclick="window.location.href='index.html'" style="cursor:pointer;">
+    </div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="map.html"><i class="fa-solid fa-magnifying-glass"></i> Map</a></li>
+      </ul>
+    </nav>
+    <button class="signin-btn" id="back-btn">← Back</button>
+  </header>
+
+  <div class="chat-layout">
+
+    <!-- LEFT: Conversation list -->
+    <aside class="chat-sidebar">
+      <div class="chat-sidebar-header">
+        <h2><i class="fa-solid fa-comments"></i> Messages</h2>
+      </div>
+      <div id="convo-list" class="convo-sidebar-list">
+        <div class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i></div>
+      </div>
+    </aside>
+
+    <!-- RIGHT: Chat window -->
+    <main class="chat-main">
+      <div class="chat-header" id="chat-header">
+        <div class="chat-header-avatar"><i class="fa-regular fa-user"></i></div>
+        <div>
+          <div class="chat-header-name" id="chat-with-name">Select a conversation</div>
+          <div class="chat-header-dorm" id="chat-dorm-name"></div>
+        </div>
+        <div class="chat-status" id="chat-status">
+          <span class="status-dot online"></span> Online
+        </div>
+      </div>
+
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-empty">
+          <i class="fa-solid fa-comment-dots"></i>
+          <p>Select a conversation or start a new one from the map.</p>
+        </div>
+      </div>
+
+      <div class="typing-indicator" id="typing-indicator" style="display:none;">
+        <span></span><span></span><span></span>
+      </div>
+
+      <div class="chat-input-area" id="chat-input-area">
+        <input type="text" id="chat-input" placeholder="Type a message…" disabled>
+        <button id="send-btn" class="send-btn" disabled>
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+    </main>
+
+  </div>
+
+  <script src="api.js"></script>
+  <script>
+    const currentUser = requireAuth();
+    if (!currentUser) throw new Error('Not authed');
+
+    // Back button
+    document.getElementById('back-btn').onclick = () => history.back();
+
+    // URL params
+    const params  = new URLSearchParams(location.search);
+    let toUserId  = params.get('to') ? Number(params.get('to')) : null;
+    let dormId    = params.get('dorm') ? Number(params.get('dorm')) : null;
+    let dormName  = params.get('dormName') || '';
+
+    // ── WebSocket Chat ─────────────────────────────────────────────────────
+    const chatClient = new ChatClient(
+      onMessage,
+      (fromId) => {
+        if (fromId === toUserId) showTyping();
+      },
+      () => {
+        if (toUserId) openConversation(toUserId, dormId, dormName);
+      }
+    );
+    chatClient.connect();
+
+    let typingTimer = null;
+    function showTyping() {
+      document.getElementById('typing-indicator').style.display = 'flex';
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => {
+        document.getElementById('typing-indicator').style.display = 'none';
+      }, 2000);
+    }
+
+    // ── Message rendering ──────────────────────────────────────────────────
+    function onMessage(msg) {
+      // Only render if it belongs to the active conversation
+      const relevant = (msg.sender_id === toUserId && msg.receiver_id === currentUser.id)
+                    || (msg.sender_id === currentUser.id && msg.receiver_id === toUserId);
+      if (!relevant) { loadConversations(); return; }
+      appendMessage(msg);
+      loadConversations();
+    }
+
+    function appendMessage(msg) {
+      const box = document.getElementById('chat-messages');
+      const empty = box.querySelector('.chat-empty');
+      if (empty) empty.remove();
+
+      const isMe = msg.sender_id === currentUser.id;
+      const div = document.createElement('div');
+      div.className = `chat-bubble ${isMe ? 'me' : 'them'}`;
+      div.innerHTML = `
+        <div class="bubble-text">${escapeHtml(msg.text)}</div>
+        <div class="bubble-time">${new Date(msg.created_at).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'})}</div>`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // ── Open conversation ──────────────────────────────────────────────────
+    async function openConversation(userId, dId, dName) {
+      toUserId = userId; dormId = dId; dormName = dName;
+
+      document.getElementById('chat-dorm-name').textContent = dName || '';
+      document.getElementById('chat-input').disabled = false;
+      document.getElementById('send-btn').disabled = false;
+
+      // Fetch history from REST
+      const box = document.getElementById('chat-messages');
+      box.innerHTML = '<div class="loading-spinner" style="margin:auto;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+      try {
+        const url = dormId ? `/messages/${userId}?dormId=${dormId}` : `/messages/${userId}`;
+        const msgs = await apiFetch(url);
+        box.innerHTML = '';
+        if (!msgs.length) {
+          box.innerHTML = `<div class="chat-empty"><i class="fa-solid fa-comment-dots"></i><p>No messages yet. Say hi!</p></div>`;
+        } else {
+          msgs.forEach(appendMessage);
+        }
+      } catch { box.innerHTML = ''; }
+
+      // Try to load other user name
+      try {
+        const allDorms = await apiFetch('/dorms');
+        const dorm = allDorms.find(d => d.owner_id === userId || d.id === dormId);
+        document.getElementById('chat-with-name').textContent = dorm?.owner_name || `User #${userId}`;
+      } catch {}
+
+      // Highlight in sidebar
+      document.querySelectorAll('.convo-sidebar-item').forEach(i => i.classList.remove('active'));
+      document.querySelector(`[data-uid="${userId}"]`)?.classList.add('active');
+    }
+
+    // ── Load conversation list ─────────────────────────────────────────────
+    async function loadConversations() {
+      const list = document.getElementById('convo-list');
+      try {
+        const convos = await apiFetch('/messages/conversations');
+        if (!convos.length && !toUserId) {
+          list.innerHTML = `<div style="padding:20px;color:#888;font-size:14px;">No conversations yet. Contact an owner from the <a href="map.html" style="color:#800020">map</a>.</div>`;
+          return;
+        }
+        list.innerHTML = convos.map(c => `
+          <div class="convo-sidebar-item ${c.other_id===toUserId?'active':''} ${c.unread?'unread':''}"
+               data-uid="${c.other_id}" data-dorm="${c.dorm_id||''}" data-name="${c.dorm_name||''}">
+            <div class="convo-avatar"><i class="fa-regular fa-user"></i></div>
+            <div class="convo-body">
+              <div class="convo-top">
+                <span class="convo-name">${c.other_name}</span>
+                <span class="convo-time">${new Date(c.last_time).toLocaleDateString('en-PH',{month:'short',day:'numeric'})}</span>
+              </div>
+              ${c.dorm_name ? `<div class="convo-dorm"><i class="fa-solid fa-house fa-xs"></i> ${c.dorm_name}</div>` : ''}
+              <div class="convo-preview">${c.last_message}</div>
+            </div>
+            ${c.unread ? `<span class="convo-unread-badge">${c.unread}</span>` : ''}
+          </div>`).join('');
+
+        document.querySelectorAll('.convo-sidebar-item').forEach(item => {
+          item.addEventListener('click', () => {
+            openConversation(Number(item.dataset.uid), Number(item.dataset.dorm)||null, item.dataset.name);
+          });
+        });
+
+        // Auto-open from URL params
+        if (toUserId && !document.querySelector('.chat-bubble')) {
+          openConversation(toUserId, dormId, dormName);
+        }
+      } catch {}
+    }
+    loadConversations();
+
+    // ── Send message ───────────────────────────────────────────────────────
+    function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text || !toUserId) return;
+      chatClient.send(toUserId, text, dormId);
+      input.value = '';
+    }
+
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
+    document.getElementById('chat-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+      else chatClient.sendTyping(toUserId);
+    });
+  </script>
+</body>
+</html>

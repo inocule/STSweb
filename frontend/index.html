@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RooME</title>
+
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+  />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css" />
+   <!-- Leaflet CSS -->
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="logo">
+       <img src="./Images/RooME.webp" alt="RooME Logo" onclick="window.location.href='index.html'">
+    </div>
+
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="map.html"><i class="fa-solid fa-magnifying-glass"></i> Map</a></li>
+      </ul>
+    </nav>
+
+    <button class="signin-btn" onclick="window.location.href='signin.html'">Sign In</button>
+  </header>
+
+  <!-- HERO SECTION -->
+ <section class="hero">
+
+    <div class="overlay"></div>
+
+    <div class="hero-content">
+
+      <h1>
+        Find Your Ideal Dorm <br />
+        Near PUP Main Campus
+      </h1>
+
+      <p>
+        Discover comfortable, affordable student housing close to PUP Main
+        Campus with real-time availability
+      </p>
+
+      <button class="cta-btn">
+        Search Dorms
+      </button>
+
+    </div>
+  </section>
+
+
+  <!-- HOW IT WORKS -->
+<section class="how-it-works">
+  <h2>How It Works</h2>
+
+  <div class="steps">
+
+    <div class="step">
+      <div class="step-icon">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </div>
+      <h3>Search & Filter</h3>
+      <p>Browse dorms by location, price, and amenities with our interactive map</p>
+    </div>
+
+    <div class="step">
+      <div class="step-icon">
+        <i class="fa-solid fa-house"></i>
+      </div>
+      <h3>View Details</h3>
+      <p>Check real-time availability, photos, and amenities for each property</p>
+    </div>
+
+    <div class="step">
+      <div class="step-icon">
+        <i class="fa-solid fa-location-dot"></i>
+      </div>
+      <h3>Connect & Move In</h3>
+      <p>Contact owners directly and secure your ideal dorm near campus</p>
+    </div>
+
+  </div>
+</section>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="api.js"></script>
+  <script src="Script.js"></script>
+  <script>updateNavbar();</script>
+</body>
+</html>

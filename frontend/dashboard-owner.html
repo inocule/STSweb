@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RooME – Owner Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="dashboard.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+</head>
+<body class="dashboard-body">
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="logo">
+      <img src="./Images/RooME.webp" alt="RooME Logo" onclick="window.location.href='index.html'" style="cursor:pointer;">
+    </div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="map.html"><i class="fa-solid fa-magnifying-glass"></i> Map</a></li>
+      </ul>
+    </nav>
+    <button class="signin-btn" id="nav-dashboard-btn">Dashboard</button>
+  </header>
+
+  <div class="dash-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="dash-sidebar">
+      <div class="dash-profile">
+        <div class="dash-avatar"><i class="fa-solid fa-building"></i></div>
+        <div>
+          <div class="dash-username" id="owner-name">Loading…</div>
+          <div class="dash-role-badge">Property Owner</div>
+        </div>
+      </div>
+      <nav class="dash-nav">
+        <a href="#" class="dash-nav-item active" data-tab="listings">
+          <i class="fa-solid fa-list"></i> My Listings
+        </a>
+        <a href="#" class="dash-nav-item" data-tab="add">
+          <i class="fa-solid fa-plus"></i> Add Dorm
+        </a>
+        <a href="#" class="dash-nav-item" data-tab="messages">
+          <i class="fa-solid fa-message"></i> Messages
+          <span class="nav-badge" id="msg-badge" style="display:none"></span>
+        </a>
+        <a href="#" class="dash-nav-item logout-item" id="logout-btn">
+          <i class="fa-solid fa-right-from-bracket"></i> Log Out
+        </a>
+      </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="dash-main">
+
+      <!-- ── My Listings ── -->
+      <section id="tab-listings" class="dash-tab active">
+        <div class="dash-tab-header">
+          <h1>My Listings</h1>
+          <button class="btn-primary" onclick="switchTab('add')">
+            <i class="fa-solid fa-plus"></i> Add New
+          </button>
+        </div>
+        <div class="listings-grid" id="owner-listings">
+          <div class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</div>
+        </div>
+      </section>
+
+      <!-- ── Add Dorm ── -->
+      <section id="tab-add" class="dash-tab">
+        <div class="dash-tab-header">
+          <h1 id="add-form-title">Add New Dorm</h1>
+        </div>
+        <div class="form-card">
+          <form id="dorm-form">
+            <input type="hidden" id="edit-dorm-id">
+            <div class="form-grid">
+              <div class="form-field">
+                <label>Dorm Name *</label>
+                <input type="text" id="f-name" placeholder="e.g. Campus Heights" required>
+              </div>
+              <div class="form-field">
+                <label>Price per Month (₱) *</label>
+                <input type="number" id="f-price" placeholder="e.g. 4000" required>
+              </div>
+              <!-- Map Picker (full width) -->
+              <div class="form-field full-width">
+                <label>
+                  <i class="fa-solid fa-map-location-dot" style="color:#800020;"></i>
+                  Pin Location on Map <span style="color:#888;font-weight:400;font-size:12px;">— click anywhere to set coordinates</span>
+                </label>
+                <div id="picker-map" style="height:280px;border-radius:12px;border:1px solid #e8eaed;overflow:hidden;cursor:crosshair;"></div>
+                <div style="display:flex;gap:12px;margin-top:10px;">
+                  <div style="flex:1;">
+                    <label style="font-size:12px;color:#6b6b6b;font-weight:600;">Latitude</label>
+                    <input type="number" id="f-lat" placeholder="Click map to set" step="any" required
+                      style="width:100%;padding:10px 12px;border:1px solid #e8eaed;border-radius:8px;font-size:13px;background:#f9fafb;" readonly>
+                  </div>
+                  <div style="flex:1;">
+                    <label style="font-size:12px;color:#6b6b6b;font-weight:600;">Longitude</label>
+                    <input type="number" id="f-lng" placeholder="Click map to set" step="any" required
+                      style="width:100%;padding:10px 12px;border:1px solid #e8eaed;border-radius:8px;font-size:13px;background:#f9fafb;" readonly>
+                  </div>
+                  <div style="display:flex;align-items:flex-end;">
+                    <button type="button" id="use-my-loc-btn" title="Use my current location"
+                      style="padding:10px 14px;background:#800020;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;white-space:nowrap;">
+                      <i class="fa-solid fa-location-arrow"></i> My Location
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="form-field full-width">
+                <label>Address</label>
+                <input type="text" id="f-address" placeholder="Street, Barangay, City">
+              </div>
+              <div class="form-field full-width">
+                <label>Description</label>
+                <textarea id="f-desc" rows="3" placeholder="Describe your dorm…"></textarea>
+              </div>
+              <div class="form-field full-width">
+                <label>Image URL</label>
+                <input type="url" id="f-image" placeholder="https://…">
+              </div>
+              <div class="form-field full-width">
+                <label>Amenities</label>
+                <div class="amenities-pills" id="amenity-picker">
+                  <button type="button" class="pill" data-val="WiFi">WiFi</button>
+                  <button type="button" class="pill" data-val="AC">AC</button>
+                  <button type="button" class="pill" data-val="Kitchen">Kitchen</button>
+                  <button type="button" class="pill" data-val="Parking">Parking</button>
+                  <button type="button" class="pill" data-val="Laundry">Laundry</button>
+                  <button type="button" class="pill" data-val="CCTV">CCTV</button>
+                </div>
+              </div>
+              <div class="form-field full-width">
+                <label>Status</label>
+                <select id="f-status">
+                  <option value="available">Available</option>
+                  <option value="full">Full</option>
+                </select>
+              </div>
+            </div>
+            <div id="form-error" style="display:none;color:#9b1c1c;background:#fff0f3;border:1px solid #fecdd3;padding:12px;border-radius:8px;margin-top:12px;font-size:14px;"></div>
+            <div class="form-actions-row">
+              <button type="button" class="btn-ghost" onclick="resetForm()">Cancel</button>
+              <button type="submit" class="btn-primary" id="form-submit-btn">
+                <i class="fa-solid fa-floppy-disk"></i> Save Listing
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ── Messages ── -->
+      <section id="tab-messages" class="dash-tab">
+        <div class="dash-tab-header"><h1>Student Inquiries</h1></div>
+        <div id="conversation-list" class="conversation-list">
+          <div class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="api.js"></script>
+  <script>
+    // ── Auth guard ──────────────────────────────────────────────────────────
+    const user = requireAuth('owner');
+    if (user) document.getElementById('owner-name').textContent = user.name;
+
+    document.getElementById('nav-dashboard-btn').textContent = '⚡ Dashboard';
+    document.getElementById('logout-btn').addEventListener('click', logout);
+
+    // ── Map picker setup ────────────────────────────────────────────────────
+    const PUP = [14.598074540708227, 121.01112037559832];
+    let pickerMap = null;
+    let pickerMarker = null;
+
+    function initPickerMap() {
+      if (pickerMap) return; // already initialized
+      pickerMap = L.map('picker-map', { zoomControl: true }).setView(PUP, 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(pickerMap);
+
+      // PUP reference marker
+      L.marker(PUP, {
+        icon: L.divIcon({
+          className: '',
+          html: '<div style="background:#dc2626;width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 0 5px rgba(0,0,0,0.4);"></div>',
+          iconSize: [16,16], iconAnchor: [8,8]
+        })
+      }).addTo(pickerMap).bindPopup('<b>PUP Main Campus</b><br>Reference point');
+
+      // Click to pin
+      pickerMap.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        setPickerCoords(lat, lng);
+      });
+    }
+
+    function setPickerCoords(lat, lng) {
+      document.getElementById('f-lat').value = lat.toFixed(7);
+      document.getElementById('f-lng').value = lng.toFixed(7);
+
+      // Move/place marker
+      if (pickerMarker) {
+        pickerMarker.setLatLng([lat, lng]);
+      } else {
+        pickerMarker = L.marker([lat, lng], {
+          draggable: true,
+          icon: L.divIcon({
+            className: '',
+            html: `<div style="position:relative;">
+              <div style="background:#800020;width:18px;height:18px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>
+            </div>`,
+            iconSize: [22, 22], iconAnchor: [11, 22]
+          })
+        }).addTo(pickerMap);
+
+        // Allow dragging the marker too
+        pickerMarker.on('dragend', (ev) => {
+          const pos = ev.target.getLatLng();
+          document.getElementById('f-lat').value = pos.lat.toFixed(7);
+          document.getElementById('f-lng').value = pos.lng.toFixed(7);
+          reverseGeocode(pos.lat, pos.lng);
+        });
+      }
+
+      reverseGeocode(lat, lng);
+      pickerMap.panTo([lat, lng]);
+    }
+
+    // Reverse geocode using Nominatim → auto-fill address field
+    async function reverseGeocode(lat, lng) {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+          { headers: { 'Accept-Language': 'en' } }
+        );
+        const data = await res.json();
+        if (data.display_name && !document.getElementById('f-address').value) {
+          // Only fill if address is empty
+          const parts = [data.address?.road, data.address?.suburb, data.address?.city];
+          document.getElementById('f-address').value = parts.filter(Boolean).join(', ');
+        }
+      } catch {}
+    }
+
+    // "My Location" button in picker
+    document.getElementById('use-my-loc-btn').addEventListener('click', () => {
+      navigator.geolocation.getCurrentPosition(({ coords }) => {
+        setPickerCoords(coords.latitude, coords.longitude);
+        pickerMap.flyTo([coords.latitude, coords.longitude], 17);
+      }, () => alert('Could not get your location.'));
+    });
+
+    // ── Tab navigation ──────────────────────────────────────────────────────
+    function switchTab(id) {
+      document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.dash-nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('tab-' + id).classList.add('active');
+      document.querySelector(`[data-tab="${id}"]`)?.classList.add('active');
+      // Initialize / resize picker map when Add tab becomes visible
+      if (id === 'add') {
+        setTimeout(() => {
+          initPickerMap();
+          pickerMap.invalidateSize();
+          // If editing, fly to existing coords
+          const lat = parseFloat(document.getElementById('f-lat').value);
+          const lng = parseFloat(document.getElementById('f-lng').value);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            setPickerCoords(lat, lng);
+            pickerMap.setView([lat, lng], 16);
+          }
+        }, 50);
+      }
+    }
+    document.querySelectorAll('.dash-nav-item[data-tab]').forEach(a => {
+      a.addEventListener('click', e => { e.preventDefault(); switchTab(a.dataset.tab); });
+    });
+
+    // ── Amenity pills ───────────────────────────────────────────────────────
+    document.querySelectorAll('#amenity-picker .pill').forEach(p =>
+      p.addEventListener('click', () => p.classList.toggle('active'))
+    );
+
+    // ── Load owner listings ─────────────────────────────────────────────────
+    async function loadListings() {
+      const grid = document.getElementById('owner-listings');
+      try {
+        const dorms = await apiFetch('/dorms/owner/mine');
+        if (!dorms.length) {
+          grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-house-circle-xmark"></i><p>No listings yet. Add your first dorm!</p></div>`;
+          return;
+        }
+        grid.innerHTML = dorms.map(d => `
+          <div class="listing-card">
+            <div class="listing-img" style="background-image:url('${d.image_url || ''}')">
+              <span class="status-badge ${d.status}">${d.status === 'available' ? 'Available' : 'Full'}</span>
+            </div>
+            <div class="listing-body">
+              <h3>${d.name}</h3>
+              <p class="listing-price">₱${Number(d.price).toLocaleString()}/mo</p>
+              <p class="listing-addr"><i class="fa-solid fa-location-dot"></i> ${d.address || 'No address set'}</p>
+              <div class="prop-amenities">${(d.amenities||[]).map(a=>`<span class="small-pill">${a}</span>`).join('')}</div>
+              <div class="listing-actions">
+                <button class="btn-ghost btn-sm" onclick="editDorm(${d.id})"><i class="fa-solid fa-pen"></i> Edit</button>
+                <button class="btn-danger btn-sm" onclick="deleteDorm(${d.id},'${d.name}')"><i class="fa-solid fa-trash"></i> Delete</button>
+                <button class="btn-ghost btn-sm" onclick="toggleStatus(${d.id},'${d.status}')">
+                  <i class="fa-solid fa-toggle-${d.status==='available'?'on':'off'}"></i>
+                  ${d.status==='available'?'Mark Full':'Mark Available'}
+                </button>
+              </div>
+            </div>
+          </div>`).join('');
+      } catch(e) {
+        grid.innerHTML = `<div class="empty-state" style="color:#9b1c1c;">${e.message}</div>`;
+      }
+    }
+    loadListings();
+
+    // ── Dorm form submit ────────────────────────────────────────────────────
+    document.getElementById('dorm-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById('form-error');
+      const btn   = document.getElementById('form-submit-btn');
+      errEl.style.display = 'none';
+      btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+
+      const editId = document.getElementById('edit-dorm-id').value;
+      const amenities = [...document.querySelectorAll('#amenity-picker .pill.active')].map(p => p.dataset.val);
+      const body = {
+        name: document.getElementById('f-name').value,
+        price: Number(document.getElementById('f-price').value),
+        lat: Number(document.getElementById('f-lat').value),
+        lng: Number(document.getElementById('f-lng').value),
+        address: document.getElementById('f-address').value,
+        description: document.getElementById('f-desc').value,
+        image_url: document.getElementById('f-image').value,
+        status: document.getElementById('f-status').value,
+        amenities
+      };
+
+      try {
+        if (editId) {
+          await apiFetch('/dorms/' + editId, { method: 'PUT', body: JSON.stringify(body) });
+        } else {
+          await apiFetch('/dorms', { method: 'POST', body: JSON.stringify(body) });
+        }
+        resetForm();
+        await loadListings();
+        switchTab('listings');
+      } catch(err) {
+        errEl.textContent = err.message; errEl.style.display = 'block';
+      }
+      btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Listing';
+    });
+
+    function resetForm() {
+      document.getElementById('dorm-form').reset();
+      document.getElementById('edit-dorm-id').value = '';
+      document.getElementById('add-form-title').textContent = 'Add New Dorm';
+      document.querySelectorAll('#amenity-picker .pill').forEach(p => p.classList.remove('active'));
+      // Clear picker marker and coord fields
+      if (pickerMarker) { pickerMap.removeLayer(pickerMarker); pickerMarker = null; }
+      document.getElementById('f-lat').value = '';
+      document.getElementById('f-lng').value = '';
+      if (pickerMap) pickerMap.setView(PUP, 15);
+      switchTab('listings');
+    }
+
+    async function editDorm(id) {
+      try {
+        const d = await apiFetch('/dorms/' + id);
+        document.getElementById('edit-dorm-id').value = d.id;
+        document.getElementById('f-name').value = d.name;
+        document.getElementById('f-price').value = d.price;
+        document.getElementById('f-lat').value = d.lat;
+        document.getElementById('f-lng').value = d.lng;
+        document.getElementById('f-address').value = d.address || '';
+        document.getElementById('f-desc').value = d.description || '';
+        document.getElementById('f-image').value = d.image_url || '';
+        document.getElementById('f-status').value = d.status;
+        document.querySelectorAll('#amenity-picker .pill').forEach(p => {
+          p.classList.toggle('active', d.amenities.includes(p.dataset.val));
+        });
+        document.getElementById('add-form-title').textContent = 'Edit Listing';
+        switchTab('add');
+      } catch(e) { alert(e.message); }
+    }
+
+    async function deleteDorm(id, name) {
+      if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+      try { await apiFetch('/dorms/' + id, { method: 'DELETE' }); loadListings(); }
+      catch(e) { alert(e.message); }
+    }
+
+    async function toggleStatus(id, current) {
+      const status = current === 'available' ? 'full' : 'available';
+      try { await apiFetch('/dorms/' + id, { method: 'PUT', body: JSON.stringify({ status }) }); loadListings(); }
+      catch(e) { alert(e.message); }
+    }
+
+    // ── Messages tab ────────────────────────────────────────────────────────
+    async function loadConversations() {
+      const list = document.getElementById('conversation-list');
+      try {
+        const convos = await apiFetch('/messages/conversations');
+        if (!convos.length) {
+          list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-comment-slash"></i><p>No messages yet.</p></div>`;
+          return;
+        }
+        const unread = convos.reduce((s, c) => s + (c.unread || 0), 0);
+        if (unread) { document.getElementById('msg-badge').textContent = unread; document.getElementById('msg-badge').style.display='inline'; }
+        list.innerHTML = convos.map(c => `
+          <a href="chat.html?to=${c.other_id}&dorm=${c.dorm_id || ''}&dormName=${encodeURIComponent(c.dorm_name||'')}" class="convo-item ${c.unread?'unread':''}">
+            <div class="convo-avatar"><i class="fa-regular fa-user"></i></div>
+            <div class="convo-body">
+              <div class="convo-top">
+                <span class="convo-name">${c.other_name}</span>
+                <span class="convo-time">${new Date(c.last_time).toLocaleDateString('en-PH',{month:'short',day:'numeric'})}</span>
+              </div>
+              <div class="convo-dorm"><i class="fa-solid fa-house fa-xs"></i> ${c.dorm_name || 'General inquiry'}</div>
+              <div class="convo-preview">${c.last_message}</div>
+              ${c.unread ? `<span class="convo-unread-badge">${c.unread}</span>` : ''}
+            </div>
+          </a>`).join('');
+      } catch(e) {
+        list.innerHTML = `<div class="empty-state" style="color:#9b1c1c;">${e.message}</div>`;
+      }
+    }
+    document.querySelector('[data-tab="messages"]').addEventListener('click', loadConversations);
+  </script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RooME - Map Search</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+
+<body class="map-page-body">
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="logo">
+       <img src="./Images/RooME.webp" alt="RooME Logo" onclick="window.location.href='index.html'" style="cursor:pointer;">
+    </div>
+
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="map.html"><i class="fa-solid fa-magnifying-glass"></i> Map</a></li>
+      </ul>
+    </nav>
+
+    <button class="signin-btn" onclick="window.location.href='signin.html'">Sign In</button>
+  </header>
+
+  <!-- MAP PAGE CONTENT -->
+  <div class="map-container">
+    <!-- LEFT SIDEBAR -->
+    <aside class="map-sidebar">
+      <div class="sidebar-header">
+        <h1>Find Your Dorm</h1>
+        <button class="my-location-btn">
+          <i class="fa-solid fa-location-arrow"></i> My Location
+        </button>
+      </div>
+
+      <div class="filters">
+        <div class="filter-group">
+          <label>Location</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-location-dot"></i>
+            <input type="text" placeholder="Manila">
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label>Price Range (₱)</label>
+          <div class="price-inputs">
+            <input type="number" placeholder="Min">
+            <input type="number" placeholder="Max">
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label>Max Distance (km)</label>
+          <input type="text" placeholder="Enter max distance">
+        </div>
+
+        <div class="filter-group">
+          <label>Amenities</label>
+          <div class="amenities-pills">
+            <button class="pill">WiFi</button>
+            <button class="pill">AC</button>
+            <button class="pill">Kitchen</button>
+            <button class="pill">Parking</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="results-count">
+        <p>3 properties found</p>
+      </div>
+
+      <div class="property-list">
+        <!-- Property 1 -->
+        <div class="property-card">
+          <img src="https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=300&auto=format&fit=crop"
+            alt="Property">
+          <div class="property-info">
+            <div class="prop-price-dist">
+              <span class="price">₱2,000/mo</span>
+              <span class="dist"><i class="fa-solid fa-location-dot"></i> 0.5 km</span>
+            </div>
+            <div class="prop-amenities">
+              <span class="small-pill">WiFi</span>
+              <span class="small-pill">AC</span>
+              <span class="small-pill">Kitchen</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Property 2 -->
+        <div class="property-card">
+          <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=300&auto=format&fit=crop"
+            alt="Campus Heights">
+          <div class="property-info">
+            <div class="prop-header">
+              <h3>Campus Heights</h3>
+              <span class="status-badge available">Available</span>
+            </div>
+            <div class="prop-rating">
+              <i class="fa-solid fa-star"></i> 4.8 <span>(42 reviews)</span>
+            </div>
+            <div class="prop-price-dist">
+              <span class="price">₱4,000/mo</span>
+              <span class="dist"><i class="fa-solid fa-location-dot"></i> 0.8 km</span>
+            </div>
+            <div class="prop-amenities">
+              <span class="small-pill">WiFi</span>
+              <span class="small-pill">Parking</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Property 3 -->
+        <div class="property-card">
+          <img src="https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?q=80&w=300&auto=format&fit=crop"
+            alt="Cozy Place">
+          <div class="property-info">
+            <div class="prop-header">
+              <h3>The Cozy Place</h3>
+              <span class="status-badge full">Full</span>
+            </div>
+            <div class="prop-rating">
+              <i class="fa-solid fa-star"></i> 4.5 <span>(18 reviews)</span>
+            </div>
+            <div class="prop-price-dist">
+              <span class="price">₱3,500/mo</span>
+              <span class="dist"><i class="fa-solid fa-location-dot"></i> 1.2 km</span>
+            </div>
+            <div class="prop-amenities">
+              <span class="small-pill">AC</span>
+              <span class="small-pill">Kitchen</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT MAP -->
+    <main class="map-view">
+      <div id="map"></div>
+
+      <!-- Legend -->
+      <div class="map-legend">
+        <h4>Map Legend</h4>
+        <div class="legend-item">
+          <span class="legend-dot user-loc"></span> Your Location
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot avail-dorm"></span> Available Dorm
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot full-dorm"></span> Full Dorm
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="api.js"></script>
+  <script src="map.js"></script>
+</body>
+
+</html>

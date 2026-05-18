@@ -125,7 +125,11 @@ async function initDb() {
     await initSchema();
     await seedIfEmpty();
   } catch (err) {
-    console.error('❌ Database init failed:', err.message);
+    console.error('❌ Database init failed:');
+    console.error('  message :', err.message);
+    console.error('  code    :', err.code);
+    console.error('  detail  :', err.detail);
+    console.error('  stack   :', err.stack);
     process.exit(1);
   }
 }

@@ -1,7 +1,15 @@
 // frontend/api.js — Shared API & Auth utilities
 
-const API_BASE = 'http://localhost:3000/api';
-const WS_URL   = 'ws://localhost:3000/ws';
+// ─── Backend URL Configuration ────────────────────────────────────────────────
+// In production: set BACKEND_URL to your Render service URL, e.g.
+//   https://roome-backend.onrender.com
+// In local dev: leave as empty string to hit localhost:3000 (served by Express).
+const BACKEND_URL = window.__BACKEND_URL__ || '';   // injected by vercel.json rewrite or left empty locally
+
+const API_BASE = BACKEND_URL ? `${BACKEND_URL}/api`   : '/api';
+const WS_URL   = BACKEND_URL
+  ? BACKEND_URL.replace(/^http/, 'ws') + '/ws'
+  : `ws://${location.host}/ws`;
 
 // ─── Auth Helpers ─────────────────────────────────────────────────────────────
 

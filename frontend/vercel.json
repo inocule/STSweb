@@ -1,14 +1,26 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://roome-backend.onrender.com/api/:path*" },
-    { "source": "/ws",         "destination": "https://roome-backend.onrender.com/ws" }
+    {
+      "source": "/api/:path*",
+      "destination": "https://stsweb.onrender.com/api/:path*"
+    },
+    {
+      "source": "/ws",
+      "destination": "https://stsweb.onrender.com/ws"
+    }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options",        "value": "DENY" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        }
       ]
     }
   ]

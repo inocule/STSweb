@@ -636,6 +636,16 @@ body {
 .prop-amenities {
     display: flex;
     gap: 6px;
+    flex-wrap: wrap;
+}
+
+.prop-owner {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #888;
+    margin-top: 2px;
 }
 
 .small-pill {
@@ -972,4 +982,252 @@ body {
     color: rgba(255, 255, 255, 0.9);
     font-size: 14px;
     margin-top: 30px;
+}
+
+/* ─── GEOCODE SEARCH BAR ────────────────────────────────────────────────────── */
+
+#geocode-group {
+    position: relative;
+}
+
+.geocode-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.geocode-icon {
+    position: absolute;
+    left: 13px;
+    color: #800020;
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+#location-search {
+    width: 100%;
+    padding: 11px 40px 11px 36px;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: #fff;
+    color: #1a1a1a;
+}
+
+#location-search:focus {
+    border-color: #800020;
+    box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1);
+}
+
+#location-search::placeholder {
+    color: #aaa;
+}
+
+#geocode-clear {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #aaa;
+    font-size: 14px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: color 0.2s;
+    line-height: 1;
+}
+
+#geocode-clear:hover {
+    color: #800020;
+}
+
+/* Autocomplete dropdown */
+.geocode-suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    list-style: none;
+    z-index: 2000;
+    overflow: hidden;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.geocode-suggestions li {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 13px;
+    gap: 2px;
+}
+
+.geocode-suggestions li:last-child {
+    border-bottom: none;
+}
+
+.geocode-suggestions li:hover,
+.geocode-suggestions li.active {
+    background: #fdf2f4;
+}
+
+.geocode-suggestions li.no-results,
+.geocode-suggestions li.searching {
+    color: #888;
+    cursor: default;
+    font-style: italic;
+}
+
+.geocode-suggestions li.no-results:hover,
+.geocode-suggestions li.searching:hover {
+    background: white;
+}
+
+.suggest-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.suggest-icon {
+    color: #800020;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.suggest-primary {
+    font-weight: 600;
+    color: #1a1a1a;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.suggest-secondary {
+    color: #888;
+    font-size: 12px;
+    padding-left: 19px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ─── SEARCH THIS AREA BUTTON ───────────────────────────────────────────────── */
+
+.search-area-btn {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1001;
+    background: white;
+    border: none;
+    border-radius: 24px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a1a;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: box-shadow 0.2s, transform 0.2s;
+    white-space: nowrap;
+}
+
+.search-area-btn:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+    transform: translateX(-50%) translateY(-1px);
+}
+
+.search-area-btn i {
+    color: #800020;
+}
+
+/* ─── TOAST NOTIFICATIONS ───────────────────────────────────────────────────── */
+
+.map-toast {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    background: #1a1a1a;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+    white-space: nowrap;
+    animation: toastIn 0.25s ease;
+}
+
+.map-toast.toast-error {
+    background: #800020;
+}
+
+.map-toast.toast-info {
+    background: #1a1a1a;
+}
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Utility */
+.hidden {
+    display: none !important;
+}
+
+/* ─── APPLY FILTERS / FIND DORMS BUTTON ────────────────────────────────────── */
+
+.apply-filters-btn {
+    width: 100%;
+    padding: 13px 20px;
+    background: #800020;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    letter-spacing: 0.01em;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(128, 0, 32, 0.25);
+    flex-shrink: 0;
+}
+
+.apply-filters-btn:hover {
+    background: #6e001c;
+    box-shadow: 0 4px 14px rgba(128, 0, 32, 0.35);
+    transform: translateY(-1px);
+}
+
+.apply-filters-btn:active {
+    background: #5a0017;
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(128, 0, 32, 0.2);
+}
+
+.apply-filters-btn i {
+    font-size: 13px;
 }

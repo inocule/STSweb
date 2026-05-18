@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 </head>
 
 <body class="map-page-body">
@@ -46,12 +47,21 @@
       </div>
 
       <div class="filters">
-        <div class="filter-group">
-          <label>Location</label>
-          <div class="input-with-icon">
-            <i class="fa-solid fa-location-dot"></i>
-            <input type="text" placeholder="Manila">
+        <div class="filter-group" id="geocode-group">
+          <label for="location-search">Search Location</label>
+          <div class="geocode-search-wrap">
+            <i class="fa-solid fa-magnifying-glass geocode-icon"></i>
+            <input
+              type="text"
+              id="location-search"
+              placeholder="PUP Manila, Katipunan QC, Taft Ave…"
+              autocomplete="off"
+            />
+            <button id="geocode-clear" title="Clear" class="hidden">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
           </div>
+          <ul id="geocode-suggestions" class="geocode-suggestions hidden"></ul>
         </div>
 
         <div class="filter-group">
@@ -77,6 +87,11 @@
           </div>
         </div>
       </div>
+
+      <!-- Apply Filters Button -->
+      <button id="apply-filters-btn" class="apply-filters-btn">
+        <i class="fa-solid fa-magnifying-glass"></i> Find Dorms
+      </button>
 
       <div class="results-count">
         <p>3 properties found</p>
@@ -152,6 +167,14 @@
     <main class="map-view">
       <div id="map"></div>
 
+      <!-- Search This Area floating button -->
+      <button id="search-area-btn" class="search-area-btn hidden">
+        <i class="fa-solid fa-arrows-rotate"></i> Search this area
+      </button>
+
+      <!-- Toast notification -->
+      <div id="map-toast" class="map-toast hidden"></div>
+
       <!-- Legend -->
       <div class="map-legend">
         <h4>Map Legend</h4>
@@ -169,6 +192,7 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
   <script src="api.js"></script>
   <script src="map.js"></script>
 </body>

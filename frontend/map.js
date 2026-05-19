@@ -68,8 +68,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (filters.maxDistance) params.set('maxDistance', filters.maxDistance);
 
     try {
-      const res = await fetch(`http://localhost:3000/api/dorms?${params}`);
-      allDorms = await res.json();
+      const qs = params.toString();
+      allDorms = await apiFetch('/dorms' + (qs ? '?' + qs : ''));
     } catch {
       // Fallback demo data when backend is offline
       allDorms = [

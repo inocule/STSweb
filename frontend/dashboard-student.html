@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RooME – Student Dashboard</title>
+  <meta name="description" content="RooME student dashboard — browse saved dorms and manage your inquiries.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="dashboard.css"/>
+</head>
+<body class="dashboard-body">
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="logo">
+      <img src="./Images/RooME.webp" alt="RooME Logo" onclick="window.location.href='index.html'" style="cursor:pointer;">
+    </div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="index.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="map.html"><i class="fa-solid fa-magnifying-glass"></i> Map</a></li>
+      </ul>
+    </nav>
+    <button class="signin-btn" id="nav-dashboard-btn">My Account</button>
+  </header>
+
+  <div class="dash-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="dash-sidebar">
+      <div class="dash-profile">
+        <div class="dash-avatar"><i class="fa-regular fa-user"></i></div>
+        <div>
+          <div class="dash-username" id="student-name">Loading…</div>
+          <div class="dash-role-badge" style="background:rgba(0,100,200,0.12);color:#0064c8;">Student</div>
+        </div>
+      </div>
+      <nav class="dash-nav">
+        <a href="#" class="dash-nav-item active" data-tab="browse">
+          <i class="fa-solid fa-magnifying-glass"></i> Browse Dorms
+        </a>
+        <a href="#" class="dash-nav-item" data-tab="messages">
+          <i class="fa-solid fa-message"></i> My Inquiries
+          <span class="nav-badge" id="msg-badge" style="display:none"></span>
+        </a>
+        <a href="#" class="dash-nav-item logout-item" id="logout-btn">
+          <i class="fa-solid fa-right-from-bracket"></i> Log Out
+        </a>
+      </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="dash-main">
+
+      <!-- ── Browse Dorms ── -->
+      <section id="tab-browse" class="dash-tab active">
+        <div class="dash-tab-header">
+          <h1>Available Dorms</h1>
+          <a href="map.html" class="btn-primary" style="text-decoration:none;">
+            <i class="fa-solid fa-map"></i> Open Map View
+          </a>
+        </div>
+
+        <!-- Quick filters -->
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;align-items:center;">
+          <input type="number" id="filter-min" placeholder="Min ₱" style="width:100px;padding:9px 12px;border:1px solid #e8eaed;border-radius:8px;font-size:13px;">
+          <input type="number" id="filter-max" placeholder="Max ₱" style="width:100px;padding:9px 12px;border:1px solid #e8eaed;border-radius:8px;font-size:13px;">
+          <select id="filter-status" style="padding:9px 12px;border:1px solid #e8eaed;border-radius:8px;font-size:13px;background:white;">
+            <option value="">All Statuses</option>
+            <option value="available">Available</option>
+            <option value="full">Full</option>
+          </select>
+          <button onclick="loadDorms()" class="btn-primary" style="padding:9px 18px;">
+            <i class="fa-solid fa-magnifying-glass"></i> Search
+          </button>
+          <span id="dorm-count" style="margin-left:auto;color:#6b6b6b;font-size:13px;"></span>
+        </div>
+
+        <div class="listings-grid" id="student-dorm-grid">
+          <div class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> Loading dorms…</div>
+        </div>
+      </section>
+
+      <!-- ── My Inquiries (Messages) ── -->
+      <section id="tab-messages" class="dash-tab">
+        <div class="dash-tab-header"><h1>My Inquiries</h1></div>
+        <div id="student-conversation-list" class="conversation-list">
+          <div class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>window.__BACKEND_URL__ = 'https://stsweb.onrender.com';</script>
+  <script src="api.js"></script>
+  <script>
+    // ── Auth guard ──────────────────────────────────────────────────────────────
+    const user = requireAuth('student');
+    if (user) document.getElementById('student-name').textContent = user.name;
+
+    document.getElementById('nav-dashboard-btn').textContent = '👤 My Account';
+    document.getElementById('logout-btn').addEventListener('click', logout);
+
+    // ── Tab navigation ──────────────────────────────────────────────────────────
+    function switchTab(id) {
+      document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.dash-nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('tab-' + id).classList.add('active');
+      document.querySelector(`[data-tab="${id}"]`)?.classList.add('active');
+      if (id === 'messages') loadConversations();
+    }
+    document.querySelectorAll('.dash-nav-item[data-tab]').forEach(a => {
+      a.addEventListener('click', e => { e.preventDefault(); switchTab(a.dataset.tab); });
+    });
+
+    // ── Load all dorms ──────────────────────────────────────────────────────────
+    async function loadDorms() {
+      const grid = document.getElementById('student-dorm-grid');
+      const countEl = document.getElementById('dorm-count');
+      grid.innerHTML = '<div class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</div>';
+
+      const params = new URLSearchParams();
+      const minP = document.getElementById('filter-min').value;
+      const maxP = document.getElementById('filter-max').value;
+      const status = document.getElementById('filter-status').value;
+      if (minP) params.set('minPrice', minP);
+      if (maxP) params.set('maxPrice', maxP);
+      if (status) params.set('status', status);
+
+      try {
+        const dorms = await apiFetch('/dorms' + (params.toString() ? '?' + params : ''));
+        countEl.textContent = `${dorms.length} propert${dorms.length !== 1 ? 'ies' : 'y'} found`;
+
+        if (!dorms.length) {
+          grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-house-circle-xmark"></i><p>No dorms match your filters.</p></div>`;
+          return;
+        }
+
+        grid.innerHTML = dorms.map(d => `
+          <div class="listing-card">
+            <div class="listing-img" style="background-image:url('${d.image_url || ''}')">
+              <span class="status-badge ${d.status}">${d.status === 'available' ? 'Available' : 'Full'}</span>
+            </div>
+            <div class="listing-body">
+              <h3>${d.name}</h3>
+              <p class="listing-price">₱${Number(d.price).toLocaleString()}/mo</p>
+              <p class="listing-addr"><i class="fa-solid fa-location-dot"></i> ${d.address || 'No address set'}</p>
+              <p style="font-size:13px;color:#6b6b6b;margin:4px 0 8px;"><i class="fa-regular fa-user"></i> ${d.owner_name || 'Unknown Owner'}</p>
+              <div class="prop-amenities">${(d.amenities||[]).map(a=>`<span class="small-pill">${a}</span>`).join('')}</div>
+              <div class="listing-actions">
+                <button class="btn-primary btn-sm contact-btn"
+                  data-owner="${d.owner_id}" data-dorm="${d.id}" data-name="${encodeURIComponent(d.name)}">
+                  <i class="fa-solid fa-message"></i> Contact Owner
+                </button>
+              </div>
+            </div>
+          </div>`).join('');
+
+        // Wire contact buttons
+        document.querySelectorAll('.contact-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const to = btn.dataset.owner;
+            const dormId = btn.dataset.dorm;
+            const dormName = btn.dataset.name;
+            window.location.href = `chat.html?to=${to}&dorm=${dormId}&dormName=${dormName}`;
+          });
+        });
+      } catch(e) {
+        grid.innerHTML = `<div class="empty-state" style="color:#9b1c1c;">${e.message}</div>`;
+        countEl.textContent = '';
+      }
+    }
+    loadDorms();
+
+    // ── Load conversations ──────────────────────────────────────────────────────
+    async function loadConversations() {
+      const list = document.getElementById('student-conversation-list');
+      try {
+        const convos = await apiFetch('/messages/conversations');
+        if (!convos.length) {
+          list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-comment-slash"></i><p>No messages yet. Contact a dorm owner to start a conversation!</p></div>`;
+          return;
+        }
+        const unread = convos.reduce((s, c) => s + (c.unread || 0), 0);
+        if (unread) {
+          document.getElementById('msg-badge').textContent = unread;
+          document.getElementById('msg-badge').style.display = 'inline';
+        }
+        list.innerHTML = convos.map(c => `
+          <a href="chat.html?to=${c.other_id}&dorm=${c.dorm_id || ''}&dormName=${encodeURIComponent(c.dorm_name||'')}" class="convo-item ${c.unread?'unread':''}">
+            <div class="convo-avatar"><i class="fa-solid fa-building"></i></div>
+            <div class="convo-body">
+              <div class="convo-top">
+                <span class="convo-name">${c.other_name}</span>
+                <span class="convo-time">${new Date(c.last_time).toLocaleDateString('en-PH',{month:'short',day:'numeric'})}</span>
+              </div>
+              <div class="convo-dorm"><i class="fa-solid fa-house fa-xs"></i> ${c.dorm_name || 'General inquiry'}</div>
+              <div class="convo-preview">${c.last_message}</div>
+              ${c.unread ? `<span class="convo-unread-badge">${c.unread}</span>` : ''}
+            </div>
+          </a>`).join('');
+      } catch(e) {
+        list.innerHTML = `<div class="empty-state" style="color:#9b1c1c;">${e.message}</div>`;
+      }
+    }
+  </script>
+</body>
+</html>

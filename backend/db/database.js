@@ -65,20 +65,29 @@ async function initSchema() {
 // ─── Seed Demo Data ───────────────────────────────────────────────────────────
 
 async function seedIfEmpty() {
-  const { rows } = await pool.query('SELECT COUNT(*)::int AS c FROM users');
-  if (rows[0].c > 0) return;
+  // Check whether the specific demo accounts already exist
+  const { rows } = await pool.query(
+    "SELECT COUNT(*)::int AS c FROM users WHERE email IN ('student@roome.ph','owner@roome.ph')"
+  );
+  if (rows[0].c >= 2) return; // both demo accounts already present
 
   const hash = await bcrypt.hash('password123', 10);
 
-  const { rows: [student] } = await pool.query(
-    'INSERT INTO users (name, email, password, role) VALUES ($1,$2,$3,$4) RETURNING id',
+  // Upsert demo users — safe even if only one account is missing
+  await pool.query(
+    'INSERT INTO users (name, email, password, role) VALUES ($1,$2,$3,$4) ON CONFLICT (email) DO NOTHING',
     ['Demo Student', 'student@roome.ph', hash, 'student']
   );
-
-  const { rows: [owner] } = await pool.query(
-    'INSERT INTO users (name, email, password, role) VALUES ($1,$2,$3,$4) RETURNING id',
+  await pool.query(
+    'INSERT INTO users (name, email, password, role) VALUES ($1,$2,$3,$4) ON CONFLICT (email) DO NOTHING',
     ['Demo Owner', 'owner@roome.ph', hash, 'owner']
   );
+
+  // Fetch owner ID by email (RETURNING is skipped on DO NOTHING)
+  const { rows: [ownerRow] } = await pool.query(
+    "SELECT id FROM users WHERE email = 'owner@roome.ph'"
+  );
+  const owner = ownerRow;
 
   const dormData = [
     {

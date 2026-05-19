@@ -111,7 +111,7 @@ The server runs at `http://localhost:3000`.
 
 - **Runtime:** Node.js
 - **Framework:** Express 5
-- **Database:** SQLite via `better-sqlite3` (file: `backend/db/roome.db`)
+- **Database:** PostgreSQL via Supabase
 - **Auth:** JSON Web Tokens (`jsonwebtoken`) + bcrypt password hashing
 - **Real-time:** Raw TCP chat server (`node:net`) bridged to browser via WebSocket (`ws`)
 
@@ -178,7 +178,7 @@ TCP Chat Server (tcp-server.js)  <-- manages all connected users in memory
   |
   | Reads / writes
   v
-SQLite (messages table)          <-- persists all messages
+PostgreSQL (messages table)      <-- persists all messages
 ```
 
 **Message flow:**
@@ -186,9 +186,27 @@ SQLite (messages table)          <-- persists all messages
 1. Browser connects to the WS gateway and sends `{ type: "auth", token: "<JWT>" }`.
 2. The gateway opens a corresponding TCP socket to the chat server and forwards the auth message.
 3. The TCP server verifies the JWT and registers the user's socket in a `Map<userId, socket>`.
-4. On any `{ type: "message", to, text, dormId }` event, the server persists the message to SQLite and forwards it to the recipient's TCP socket if they are online.
+4. On any `{ type: "message", to, text, dormId }` event, the server persists the message to PostgreSQL and forwards it to the recipient's TCP socket if they are online.
 5. When a user connects, unread messages are delivered immediately from the database.
 6. The WS gateway translates all TCP responses back to WebSocket frames for the browser.
+
+---
+
+## Deployment
+
+The application is deployed across multiple cloud platforms:
+
+- **Frontend (Vercel):** Hosted at https://roome-navy.vercel.app/, connected to the `frontend` directory of the https://github.com/inocule/STSweb repository.
+- **Backend (Render):** Hosted as a web service on Render, connected to the `backend` directory of the same repository.
+- **Database (Supabase):** PostgreSQL database hosted on Supabase.
+
+### Environment Variables
+
+The Render backend requires the following environment variables to be manually set up:
+- `DATABASE_URL`: Connection string to the Supabase database using the IPv4 session pooler.
+- `FRONTEND_URL`: URL of the deployed Vercel frontend.
+- `JWT_SECRET`: Secret key for signing JSON Web Tokens.
+- `NODE_ENV`: Set to `production`.
 
 ---
 

@@ -82,8 +82,10 @@
           <label>Password</label>
           <div class="input-wrapper">
             <i class="fa-solid fa-lock prefix-icon"></i>
-            <input type="password" placeholder="••••••••" required>
-            <i class="fa-solid fa-ellipsis suffix-icon"></i>
+            <input type="password" id="password-input" placeholder="••••••••" required>
+            <i class="fa-solid fa-eye suffix-icon" id="toggle-pass" title="Show password"
+              style="cursor:pointer;opacity:0.5;transition:opacity 0.2s;"
+              onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity=showingPass?'1':'0.5'"></i>
           </div>
         </div>
 
@@ -173,7 +175,7 @@
       errEl.style.display = 'none';
 
       const email    = document.querySelector('input[type="email"]').value.trim();
-      const password = document.querySelector('input[type="password"]').value;
+      const password = document.getElementById('password-input').value;
       const name     = document.getElementById('name-input')?.value.trim();
 
       submitBtn.textContent = isRegisterMode ? 'Creating account…' : 'Signing in…';
@@ -194,6 +196,17 @@
         submitBtn.textContent = isRegisterMode ? 'Sign Up' : 'Sign In';
         submitBtn.disabled = false;
       }
+    });
+
+    // ── Show / hide password ──────────────────────────────────────────────────
+    let showingPass = false;
+    const passInput  = document.getElementById('password-input');
+    const toggleBtn  = document.getElementById('toggle-pass');
+    toggleBtn.addEventListener('click', () => {
+      showingPass = !showingPass;
+      passInput.type = showingPass ? 'text' : 'password';
+      toggleBtn.className = `fa-solid fa-eye${showingPass ? '-slash' : ''} suffix-icon`;
+      toggleBtn.style.opacity = showingPass ? '1' : '0.5';
     });
   </script>
 

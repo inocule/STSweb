@@ -115,8 +115,18 @@
                 </div>
               </div>
               <div class="form-field full-width">
-                <label>Address</label>
-                <input type="text" id="f-address" placeholder="Street, Barangay, City">
+                <label>Address <span style="color:#888;font-weight:400;font-size:12px;">— type to search or pin on the map</span></label>
+                <div style="position:relative;">
+                  <input type="text" id="f-address" placeholder="e.g. P. Campa St, Santa Mesa, Manila"
+                    autocomplete="off"
+                    style="width:100%;padding:10px 12px;border:1px solid #e8eaed;border-radius:8px;font-size:14px;">
+                  <ul id="addr-suggestions" style="
+                    display:none;position:absolute;top:100%;left:0;right:0;z-index:9999;
+                    background:white;border:1px solid #e8eaed;border-top:none;border-radius:0 0 8px 8px;
+                    list-style:none;margin:0;padding:0;max-height:220px;overflow-y:auto;
+                    box-shadow:0 6px 18px rgba(0,0,0,0.1);font-size:13px;
+                  "></ul>
+                </div>
               </div>
               <div class="form-field full-width">
                 <label>Description</label>
@@ -177,6 +187,73 @@
 
     document.getElementById('nav-dashboard-btn').textContent = '⚡ Dashboard';
     document.getElementById('logout-btn').addEventListener('click', logout);
+
+    // ── Address autocomplete (Nominatim) ───────────────────────────────────
+    let addrDebounce = null;
+    let addrSuggestions = [];
+
+    function hideAddrSuggestions() {
+      document.getElementById('addr-suggestions').style.display = 'none';
+      addrSuggestions = [];
+    }
+
+    function renderAddrSuggestions(results) {
+      const list = document.getElementById('addr-suggestions');
+      list.innerHTML = '';
+      if (!results.length) {
+        list.innerHTML = '<li style="padding:10px 14px;color:#888;">No results found</li>';
+        list.style.display = 'block';
+        return;
+      }
+      // Deduplicate
+      const seen = new Set();
+      addrSuggestions = results.filter(r => {
+        if (seen.has(r.display_name)) return false;
+        seen.add(r.display_name); return true;
+      });
+      addrSuggestions.forEach((r, i) => {
+        const addr = r.address || {};
+        const primary   = r.display_name.split(',')[0];
+        const street    = addr.road || addr.neighbourhood || addr.suburb || '';
+        const city      = addr.city || addr.town || addr.municipality || '';
+        const secondary = [street, city].filter(Boolean).join(', ');
+        const li = document.createElement('li');
+        li.style.cssText = 'padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;transition:background 0.15s;';
+        li.innerHTML = `
+          <div style="font-weight:500;color:#1a1a1a;">${primary}</div>
+          ${secondary ? `<div style="font-size:12px;color:#888;margin-top:2px;">${secondary}</div>` : ''}`;
+        li.onmouseenter = () => li.style.background = '#f9f0f2';
+        li.onmouseleave = () => li.style.background = 'white';
+        li.addEventListener('mousedown', (e) => {
+          e.preventDefault(); // prevent blur before click
+          const parts = [addr.road || addr.neighbourhood, addr.suburb, addr.city || addr.town].filter(Boolean);
+          document.getElementById('f-address').value = parts.join(', ') || r.display_name.split(',').slice(0,3).join(',').trim();
+          // Sync coordinates with the map picker
+          setPickerCoords(parseFloat(r.lat), parseFloat(r.lon));
+          pickerMap && pickerMap.flyTo([parseFloat(r.lat), parseFloat(r.lon)], 16);
+          hideAddrSuggestions();
+        });
+        list.appendChild(li);
+      });
+      list.style.display = 'block';
+    }
+
+    document.getElementById('f-address').addEventListener('input', () => {
+      const q = document.getElementById('f-address').value.trim();
+      if (q.length < 3) { hideAddrSuggestions(); return; }
+      clearTimeout(addrDebounce);
+      addrDebounce = setTimeout(async () => {
+        try {
+          const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&countrycodes=ph&limit=6&addressdetails=1`;
+          const res = await fetch(url, { headers: { 'Accept-Language': 'en', 'User-Agent': 'RooME-DormFinder/1.0' } });
+          renderAddrSuggestions(await res.json());
+        } catch { hideAddrSuggestions(); }
+      }, 400);
+    });
+
+    document.getElementById('f-address').addEventListener('blur', () => {
+      setTimeout(hideAddrSuggestions, 200);
+    });
 
     // ── Map picker setup ────────────────────────────────────────────────────
     const PUP = [14.598074540708227, 121.01112037559832];
